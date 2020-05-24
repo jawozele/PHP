@@ -1,0 +1,230 @@
+// Connect to the database
+        $conn = new PDO("mysql:host=localhost;dbname=tca20;”, "root", "");/ 
+Q1. Complete the SELECT statement below so that ALL options from the database
+// are retrieved.
+<?php
+        $result = $conn->query("SELECT uh_options.* FROM `uh_options` ");
+        ?>
+        <style>
+            table, th, td {
+                border: 1px solid black;
+            }
+        </style>
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Description</th>
+                    <th>Staff</th>
+                    <th>Nstudents</th>
+                    <th>li_mit</th>
+                    <th>Questions</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+?>
+
+<?php
+while ($row = $result->fetch()) {
+
+
+    // Q2. Add code inside the "while" loop to display the title, full details,
+    // staff member, number of enrolled students so far, and limit, for the
+    // current option
+    echo "<tr>";
+    echo "<td>" . $row['name'] . "</td>";
+    echo "<td>" . $row['description'] . "</td>";
+    echo "<td>" . $row['staff'] . "</td>";
+    echo "<td>" . $row['nstudents'] . "</td>";
+    echo "<td>" . $row['li_mit'] . "</td>";
+
+?>
+<?php
+/ Q3 Add a hyperlink to "enrol.php". This should include a query string 
+    // containing the ID of the current option, to allow the user to 
+    // enrol on the option 
+?>
+    echo "<td><a href='enrol.php?id=" . $row['option_id'] . "'>Enrol</a></td>";
+
+// Q4. Complete the statement below to read the ID from the query string into $id.
+<?php
+            $id = $_GET["id"];
+?>
+<?php
+// Q5. Complete the SQL statement below to increase the number of enrolled
+            // students on this option by one. 
+
+            $conn->query("UPDATE uh_options SET nstudents = nstudents + 1 WHERE option_id= $id)");
+?>
+
+
+
+// Q6 complete the 'if' statement to prevent non-logged-in users from
+// accessing this script.
+<?php
+        if (asset($_SESSION["uh_user"])) {
+
+            // Connect to the database
+            $conn = new PDO("mysql:host=localhost;dbname=tca20;", "root", "");
+?>
+
+ // Q7a) Complete this to set '$u' equal to the currently logged in
+<?php
+            // user.
+            $u = $_SESSION["uh_user"];
+
+
+            // Q7b) Complete the SQL statement to add an entry to the uh_enrolments
+            // table.
+            $conn->query("insert into uh_enrolments values('','$u',$id)");
+
+            echo 'You are enrolled';
+
+            echo "<br><a href='index.php'>Home</a> ";
+        } else {
+            echo "You're not logged in";
+        }
+        ?>
+
+// Q8. Complete the code below to read in the title, description, and
+// staff member from the form
+
+<?php
+$ti = $_POST['option_name'];
+$des = $_POST['option_desc'];
+$staff = $_POST['option_staff'];
+$lim = 40; // assume limit is 40
+?>
+
+// Connect to the database
+
+$conn = new PDO ("mysql:host=localhost;dbname=tca20;”, "root", "");
+
+// Q9. Complete the SQL statement to add the option to the uh_options table.
+// Assume the limit is always 40. 
+
+<?php
+$conn->query ("insert into uh_options values('$ti','$des','$staff','','$lim','')");
+
+echo "Option inserted";
+echo "<br><a href='index.php'>Home</a> ";
+?>
+
+
+ // Q10 similar to Q3 but for question1.php
+    echo "<td><a href='question1.php?id=" . $row['option_id'] . "'>Question</a></td>";
+
+// Q11. Complete the statement to read the ID from the query string into $id.
+<?php
+$id = $_GET['id'];
+?>
+
+// Connect to the database
+
+$conn = new PDO ("mysql:host=localhost;dbname=tca20;”, "root", "");
+
+// Q12. Complete the form to allow the user to add a question. 
+// There should be a text field or text area for the question, and a hidden 
+// field containing the option ID. This form should submit to question2.php.
+
+<?php
+echo "<form action='question2.php' method='post'>";
+echo "Question: ";
+echo "<input type='hidden' name='id' value='$id'  />";
+echo "<input type='text' name='question' required />";
+echo "<input type='submit' value='Go!' />";
+echo "</form>";
+
+echo "<br><a href='index.php'>Home</a> ";
+
+?>
+
+// Connect to the database
+
+$conn = new PDO ("mysql:host=localhost;dbname=tca20;", "root", "");
+
+// Q13. Complete question2.php so that it:
+// - reads the option ID and the question from the form on question1.php;
+// - adds an entry to the uh_questions table containing the option ID, 
+//   the question, and the user who asked the question. 
+
+<?php
+
+$id=$_POST['id'];
+$question=$_POST['question'];
+$username=$_SESSION["uh_user"];
+$conn->query("insert into uh_questions values('','$username',$id,'$question')");
+
+echo "Question inserted";
+
+echo "<br><a href='index.php'>Home</a> ";
+?>
+
+// Q14. Show all questions for the current option.
+
+<?php
+    $result_1 = $conn->query("SELECT uh_questions.* FROM `uh_questions` where option_id=" . $row['option_id']);
+    echo "<td>";
+    while ($row_1 = $result_1->fetch()) {
+        echo "- ";
+        echo $row_1['question'];
+        echo '<br>';
+    }
+    echo "</td>";
+?>
+ // Q15. Add error checking to enrol.php so that a student cannot
+            // enrol onn the option if the limit has been reached.
+<?php
+            $result= $conn->query("select nstudents from uh_options WHERE option_id= $id");
+            
+             $row = $result->fetch();
+             if($row['nstudents']==40){
+                 echo “Sorry! Cannot exceed student limit.”;
+                 echo "<br><a href='index.php'>Home</a> ";
+                 exit();
+             }
+
+?>
+// Q16 continued. Complete edit1.php so that it shows a form allowing
+// the administrator to alter the description of the option. 
+// The current description must be included in
+// the form. The script must be accessible to staff only.
+// The form should send its details to edit2.php.
+
+<?php
+$id=$_GET['id'];
+
+echo "<form action='edit2.php' method='post'>";
+echo "Description: ";
+echo "<input type='hidden' name='id' value='$id'  />";
+echo "<input type='text' name='description' required />";
+echo "<input type='submit' value='Go!' />";
+echo "</form>";
+?>
+
+<?php
+
+// Connect to the database
+
+$conn = new PDO ("mysql:host=localhost;dbname=tca20;", "root", "");
+
+// Q17. Complete edit2.php to actually change the option's description
+//  in the database
+$id=$_POST['id'];
+$des=$_POST['description'];
+// Q18 Modify your answer so that access is restricted to ONLY the member
+// of staff who teaches this option.
+$conn->query("update uh_options set description= '$des' where option_id=$id ");
+
+echo "Option successfully updated";
+echo "<br><a href='index.php'>Home</a> ";
+?>
+
+// Q18 Modify your answer so that access is restricted to ONLY the member
+// of staff who teaches this option.
+
+echo "<br><a href='index.php'>Home</a> ";
+?>
+</body>
+</html>
